@@ -1,15 +1,74 @@
 import React, { Component } from 'react';
-import List from './List';
-import './App.css';
+import List from './List'
+import './App.css'
+import STORE from './store';
 
 
+const newRandomCard = () => {
+  const id = Math.random().toString(36).substring(2, 4)
+    + Math.random().toString(36).substring(2, 4);
+  return {
+    id,
+    title: `Random Card ${id}`,
+    content: 'lorem ipsum',
+  }
+}
+
+function omit(obj, keyToOmit) {
+  return Object.entries(obj).reduce(
+    (newObj, [key, value]) =>
+        key === keyToOmit ? newObj : {...newObj, [key]: value},
+    {}
+  );
+}
 
 class App extends Component {
-  static defaultProps = {
+
+    state = {
+      store: STORE,
+    };
+
+addCard = (listId) => {
+  const randomCard = newRandomCard();
+  const newCard = this.state.store.lists.map(list =>{
+    if (list.id === listId) {
+      return {
+        ...list,
+        cardIds: [...list.cardIds, randomCard.id]
+      };
+    }
+    return list;
+  })
+
+  this.setState({
     store: {
-    lists: [],
-    allCards: {},
-  }
+      lists: newCard,
+      allCards: {
+        ...this.state.store.allCards,
+        [randomCard.id]: randomCard
+      }
+    }
+  })
+  console.log('random button clicked')
+};
+
+deleteCard = (cardId) => {
+  const { lists, allCards } = this.state.store;
+
+  const newCard = lists.map(list => ({
+    ...list,
+    cardIds: list.cardIds.filter(id => id !== cardId)
+  }));
+
+  const newCards = omit(allCards, cardId);
+
+  this.setState({
+    store: {
+      lists: newCard,
+      allCards: newCards
+    }
+  })
+  console.log('deleting card');
 };
 
 render () {
@@ -25,6 +84,7 @@ render () {
           key={list.id}
           header={list.header}
           cards={list.cardIds.map(id => store.allCards[id])}
+          onAddCard={this.addCard}
           />
       ))}
       </div>    
